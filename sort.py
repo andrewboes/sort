@@ -51,15 +51,22 @@ def iou_batch(bb_test, bb_gt):
   bb_gt = np.expand_dims(bb_gt, 0)
   bb_test = np.expand_dims(bb_test, 1)
   
+  print("bb_gt", bb_gt)
+  print("bb_test",bb_test)
+  
   xx1 = np.maximum(bb_test[..., 0], bb_gt[..., 0])
   yy1 = np.maximum(bb_test[..., 1], bb_gt[..., 1])
   xx2 = np.minimum(bb_test[..., 2], bb_gt[..., 2])
   yy2 = np.minimum(bb_test[..., 3], bb_gt[..., 3])
-  w = np.maximum(0., xx2 - xx1)
-  h = np.maximum(0., yy2 - yy1)
+  print("x1..yy2",xx1, yy1,xx2,yy2)
+  w = np.maximum(120, xx2 - xx1)
+  h = np.maximum(0, yy2 - yy1)
+  print("w", w)
+  print("h", h)
   wh = w * h
   o = wh / ((bb_test[..., 2] - bb_test[..., 0]) * (bb_test[..., 3] - bb_test[..., 1])                                      
-    + (bb_gt[..., 2] - bb_gt[..., 0]) * (bb_gt[..., 3] - bb_gt[..., 1]) - wh)                                              
+    + (bb_gt[..., 2] - bb_gt[..., 0]) * (bb_gt[..., 3] - bb_gt[..., 1]) - wh)                    
+  print("o", o)                          
   return(o)  
 
 
@@ -161,7 +168,7 @@ def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
     return np.empty((0,2),dtype=int), np.arange(len(detections)), np.empty((0,5),dtype=int)
 
   iou_matrix = iou_batch(detections, trackers)
-
+  #print(iou_matrix)
   if min(iou_matrix.shape) > 0:
     a = (iou_matrix > iou_threshold).astype(np.int32)
     if a.sum(1).max() == 1 and a.sum(0).max() == 1:
@@ -183,6 +190,7 @@ def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
   #filter out matched with low IOU
   matches = []
   for m in matched_indices:
+    #print(m)
     if(iou_matrix[m[0], m[1]]<iou_threshold):
       unmatched_detections.append(m[0])
       unmatched_trackers.append(m[1])
@@ -197,7 +205,7 @@ def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
 
 
 class Sort(object):
-  def __init__(self, max_age=1, min_hits=3, iou_threshold=0.3):
+  def __init__(self, max_age=2, min_hits=3, iou_threshold=0.3):
     """
     Sets key parameters for SORT
     """
@@ -324,7 +332,7 @@ if __name__ == '__main__':
           plt.draw()
           ax1.cla()
 
-  print("Total Tracking took: %.3f seconds for %d frames or %.1f FPS" % (total_time, total_frames, total_frames / total_time))
+  #print("Total Tracking took: %.3f seconds for %d frames or %.1f FPS" % (total_time, total_frames, total_frames / total_time))
 
   if(display):
     print("Note: to get real runtime results run without the option: --display")
